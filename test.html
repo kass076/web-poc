@@ -20,6 +20,15 @@
         margin-top: 10px;
     }
 
+    .report {
+        width: 100%;
+        height: 300px;
+        border: 1px solid #3d3d3d;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-top: 10px;
+    }
+
     .draggable-item {
         margin: 2px 4px;
         padding: 5px;
@@ -29,6 +38,16 @@
         cursor: grab;
         user-select: none;
     }
+
+    .comment-chip {
+        margin: 2px 4px;
+        padding: 5px;
+        display: inline-block;
+        border: 1px solid #3d3d3d;
+        background-color: #9ed99e;
+        user-select: none;
+    }
+
 
     .draggable-container {
         min-height: 50px;
@@ -63,13 +82,19 @@
     </div>
 </div>
 
+<div>
+    <h2>Template</h2>
+</div>
 <div class="template-box" contenteditable="true">
 
 </div>
 
+<div><br></div>
 <div>
-    <input type="button" value="Generate Report" id="generate-report">
+    <input type="button" value="Apply Template to Comment" id="generate-report">
+    <input type="button" value="Update Chip" id="update-chip">
 </div>
+<div><br></div>
 <div>
     <label for="max-hr">Max HR</label>
     <input type="number" id="max-hr" placeholder="Max HR" value="130">
@@ -93,11 +118,20 @@
     <input type="number" id="runs-bpm" placeholder="Runs BPM" value="150">
 </div>
 
-<div class="template-result">
+<div><h2>Comment</h2></div>
+<div class="template-result" contenteditable="true">
 
 </div>
 
-<div></div>
+<div><br></div>
+<div>
+    <input type="button" value="Export report from Comment" id="export-report">
+</div>
+
+<div><h2>Generated Report Document</h2></div>
+<div class = "report">
+
+</div>
 
 </body>
 </html>
@@ -156,7 +190,7 @@
                     if (child.data.trim()) lastText = child; // 공백/빈 문자열(빈 치환 결과)은 건너뜀
                 } else if (child.nodeName === 'BR') {
                     endLine();
-                } else if (BLOCK_TAGS.has(child.nodeName)) {
+                } else if (BLOCK_TAGS.has(child.nodeName) && !child.classList.contains('comment-chip')) {
                     endLine(); // 블록 시작 = 이전 줄 끝
                     walk(child);
                     endLine(); // 블록 끝 = 이 줄 끝
@@ -179,13 +213,44 @@
     // ---- Generate Report: template-box의 아이템을 draggableItemValue 값으로 치환해 template-result에 출력 ----
     const templateResult = document.querySelector('.template-result');
 
+    // key에 해당하는 현재 input 값 기준 텍스트
+    const itemText = key => {
+        const def = draggableItemValue[key];
+        const v = def.value();
+        return String((def.format ? def.format(v) : v) ?? '');
+    };
+
     document.getElementById('generate-report').addEventListener('click', () => {
         const result = dnd.serialize(item => {
-            const def = draggableItemValue[item.dataset.key];
-            if (!def) return `{${item.dataset.key}}`; // 값이 없으면 key 그대로 표시
-            const v = def.value();
-            return def.format ? def.format(v) : v;
+            if (!draggableItemValue[item.dataset.key]) return `{${item.dataset.key}}`; // 값이 없으면 key 그대로 표시
+            const text = itemText(item.dataset.key);
+            if (!text) return ''; // 빈 결과(예: runs 0)는 chip 없이 생략
+
+            const chip = document.createElement('div');
+            chip.className = 'comment-chip';
+            chip.dataset.templateid = item.dataset.key;
+            chip.contentEditable = 'false'; // chip 내용은 수정 불가 (chip 단위로 삭제/이동만 가능)
+            chip.textContent = text;
+            return chip;
         });
         templateResult.replaceChildren(trimTrailingCommas(result));
+    });
+
+    // ---- Update Chip: template-result의 chip 텍스트를 현재 input 값으로 갱신 ----
+    document.getElementById('update-chip').addEventListener('click', () => {
+        templateResult.querySelectorAll('.comment-chip').forEach(chip => {
+            if (draggableItemValue[chip.dataset.templateid]) chip.textContent = itemText(chip.dataset.templateid);
+        });
+        trimTrailingCommas(templateResult); // 갱신으로 다시 붙은 줄 끝 ','를 제거
+    });
+
+    // ---- Export Report: template-result의 chip 태그를 벗기고 텍스트만 남겨 report에 출력 ----
+    const report = document.querySelector('.report');
+
+    document.getElementById('export-report').addEventListener('click', () => {
+        const copy = templateResult.cloneNode(true); // 원본 Comment는 그대로 유지
+        copy.querySelectorAll('.comment-chip').forEach(chip => chip.replaceWith(chip.textContent));
+        copy.normalize(); // chip 자리의 텍스트를 앞뒤 텍스트와 합침
+        report.replaceChildren(...copy.childNodes); // 줄바꿈(<div>, <br>) 구조 유지
     });
 </script>

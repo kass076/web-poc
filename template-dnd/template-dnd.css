@@ -1,0 +1,16 @@
+/* 드래그 중인 원본 */
+.dragging {
+    opacity: 0.4;
+}
+
+/* 미리보기가 떠 있는 동안 원본은 숨김 → 드롭 후 모습 그대로 보임 */
+.dragging.hidden {
+    display: none;
+}
+
+/* 드롭 후 모습 미리보기 */
+.drop-preview {
+    opacity: 0.5;
+    border-style: dashed;
+    cursor: grabbing;
+}

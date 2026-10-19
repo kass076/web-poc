@@ -2,6 +2,10 @@
 
 <link rel="stylesheet" href="template-dnd/template-dnd.css">
 
+<head>
+    <meta charset="UTF-8">
+</head>
+
 <style>
     .template-box {
         width: 100%;
@@ -80,6 +84,9 @@
     <div class="draggable-item" data-key="runs-runsbeat">
         Runs & Runs beat <a class="delete"> X</a>
     </div>
+    <div class="draggable-item" data-key="custom">
+        Custom <a class="delete"> X</a>
+    </div>
 </div>
 
 <div>
@@ -117,6 +124,14 @@
     <label for="runs-bpm">Runs BPM</label>
     <input type="number" id="runs-bpm" placeholder="Runs BPM" value="150">
 </div>
+<div>
+    <br>
+    <label for ="custom-logic">Custom Logic</label>
+    <textarea id = "custom-logic" style="width: 500px;" rows="4"></textarea>
+</div>
+<div>
+    <a href = "logic.html">커스텀 로직 작성 법</a>
+</div>
 
 <div><h2>Comment</h2></div>
 <div class="template-result" contenteditable="true">
@@ -138,6 +153,16 @@
 
 <script type="module">
     import {TemplateDnD} from './template-dnd/template-dnd.js';
+    import {Jexl} from 'https://cdn.jsdelivr.net/npm/jexl@2.3.0/+esm';
+
+    // ---- Custom Logic: jexl 식을 변수 객체로 평가 (DOM/다른 함수와 독립 → 별도 모듈로 분리 가능) ----
+    const customJexl = new Jexl();
+
+    // expression을 context(변수 객체)로 평가해 문자열로 반환. 빈 식은 '', 문법/평가 오류는 throw
+    const evaluateCustomLogic = (expression, context) => {
+        if (!expression.trim()) return '';
+        return String(customJexl.evalSync(expression, context) ?? '');
+    };
 
     const plural = (one, many, zero = '') => n =>
         n === 0 ? zero : n === 1 ? one : many.replace('{n}', n);
@@ -160,6 +185,21 @@
 
     };
 
+    // 페이지의 number input을 custom logic 변수로 수집 (id → camelCase, 예: runs-beat → runsBeat)
+    const collectInputVars = () => Object.fromEntries(
+        [...document.querySelectorAll('input[type="number"]')]
+            .map(el => [el.id.replace(/-(\w)/g, (_, c) => c.toUpperCase()), Number(el.value)])
+    );
+
+    const customLogicValue = () => {
+        try {
+            return evaluateCustomLogic(document.getElementById('custom-logic').value, collectInputVars());
+        } catch (e) {
+            console.error(e);
+            return `[Custom logic error: ${e.message}]`;
+        }
+    };
+
     const draggableItemValue = {
         "max-hr": {value: () => Number(document.getElementById('max-hr').value)},
         "min-hr": {value: () => Number(document.getElementById('min-hr').value)},
@@ -169,7 +209,8 @@
             value: () => Number(document.getElementById('couplet').value),
             format: plural('a couplet, ', 'couplets, ')
         },
-        "runs-runsbeat": {value: runsRunsbeatValue}
+        "runs-runsbeat": {value: runsRunsbeatValue},
+        "custom": {value: () => customLogicValue()}
     };
 
     const BLOCK_TAGS = new Set(['DIV', 'P', 'LI']);

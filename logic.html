@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+<div>
+    <h2>로직 작성 법</h2>
+</div>
+<div>
+    <h3>문법</h3>
+    <p>3항 연산자 (조건문) : {A} ? {B} : {C}</p>
+    <ul>
+        <li>A의 조건을 만족하면 B를 출력하고, A를 만족하지 못하면 C를 출력한다</li>
+        <li>ex) maxHr > 100 ? "High" : "Normal"</li>
+        <li>maxHr이 100보다 크면 "High"를 출력하고, 100보다 작거나 같으면 "Normal"을 출력한다</li>
+    </ul>
+    <p>연산자</p>
+    <ul>
+        <li>사칙연산 : +(더하기),  -(빼기), *(곱하기), /(나누기), %(나누기 몫)</li>
+        <li>비교연산 : A == B (같다), A != B (같지 않다), A > B (A는 B보다 크다), A < B (작다), A >= B (크거나 같다), A <= B (작거나 같다)</li>
+        <li>논리연산 : A && B (A와 B가 모두 참), A || B (A와 B 중 하나라도 참), !A (A가 거짓)</li>
+        <li>텍스트 이어붙이기 : "A" + maxHr + "B" 처럼 +를 사이에 두고 나열하면 됩니다</li>
+    </ul>
+    <p>괄호를 사용해 식의 단위를 묶을 수 있습니다<br>e.g) (A || B) && C = (A 와 B 중에 하나 이상이 참이면서) C도 참일 때</p>
+</div>
+
+<div>
+    <h3>변수명 (PoC용 임시. production에선 원하는 대로 변경 가능)</h3>
+    <ul>
+        <li>maxHr</li>
+        <li>minHr</li>
+        <li>avgHr</li>
+        <li>totalSve</li>
+        <li>couplet</li>
+        <li>runs</li>
+        <li>runsBeat</li>
+        <li>runsLast</li>
+        <li>runsBpm</li>
+    </ul>
+</div>
+
+<div>
+    <h3>예시 1</h3>
+    <p>1. runs가 0이면 아무것도 출력하지 않고,</p>
+    <p>2. runs가 1이고 runs beat가 3이면 "a triplet"을 출력하고</p>
+    <p>3. runs가 1이고 runs beat가 4 이상이면 "a short run of AT, Longest [runsBeat] beats run~"을 출력할 때</p>
+    <br>
+    <p>runs가 0이라면 : runs == 0</p>
+    <p>아무것도 출력하지 않음 : 빈 문자열 ""을 출력함 : runs == 0 ? "" : <- 1</p>
+    <p>runs가 1이고 runs beat가 3이면 : runs == 1 && runsBeat == 3</p>
+    <p>"a triplet"을 출력 : runs == 1 && runsBeat == 3 ? "a triplet" : <- 2</p>
+    <p>runs가 1이고 runs beat가 4 이상이면 : runs == 1 && runsBeat >= 4</p>
+    <p>"a short run of AT, Longest [runsBeat] beats run~"을 출력 : runs == 1 && runsBeat >= 4 ? "a short run of AT, Longest " + runsBeat + " beats run~" : "" <-3<br>(더 이상 조건이 없으니까 마지막엔 "" 로 빈 문자열을 나가게 해 줘야 함)</p>
+
+    <p>1, 2, 3을 연결하면</p>
+    <p>runs == 0 ? "" : (runs == 1 && runsBeat == 3 ? "a triplet" : (runs == 1 && runsBeat >= 4 ? "a short run of AT, Longest " + runsBeat + " beats run~" : ""))</p>
+    <p>(3항 연산자를 중첩해서 쓰면 나중에 헷갈리기 때문에 이렇게 괄호로 묶는 것이 좋습니다)</p>
+
+</div>
+<div>
+    <h3>기타</h3>
+    <p>식을 잘못 입력해서 프로그램이 해석할 수 없는 경우, 지금은 Comment에 출력되는 chip에 에러 메시지 출력되게 해 놓았는데, <br>production에선 chip의 custom logic을 저장할 때 제대로 된 식이 입력되어야만 저장되게 하면 될 것 같습니다.</p>
+    <p>Template 관리 메뉴에서 Custom Chip을 management하는 메뉴를 추가하면 좋을 것 같습니다</p>
+</div>
+
+</body>
+</html>
